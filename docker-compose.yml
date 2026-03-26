@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  trial-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: auto-augment-agent:latest
+    volumes:
+      - ./config:/app/config:ro
+      - ./outputs:/app/outputs:rw
+      - ./data_cache:/app/data_cache:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 16G
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    network_mode: "none"  # Isolated by default
+    restart: "no"
+
+  # Optional: Self-hosted MLflow tracking server
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+    command: >
+      mlflow server
+        --host 0.0.0.0
+        --port 5000
+        --backend-store-uri sqlite:///mlflow/mlruns/mlflow.db
+        --default-artifact-root /mlflow/mlruns
+    profiles:
+      - mlflow  # Only start with: docker compose --profile mlflow up

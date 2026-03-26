@@ -1,0 +1,92 @@
+name: Agent Trial Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_trials:
+        description: "Maximum number of trials to run"
+        required: false
+        default: "10"
+      preset:
+        description: "Configuration preset (nlp-quick, cv-quick)"
+        required: false
+        default: "nlp-quick"
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: "0 2 * * *"
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  run-trials:
+    runs-on: ubuntu-latest
+    # Use a GPU runner if available
+    # runs-on: [self-hosted, gpu]
+    timeout-minutes: 480  # 8 hours max
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[all,dev]"
+
+      - name: Initialize config
+        run: |
+          ada init --preset ${{ github.event.inputs.preset || 'nlp-quick' }}
+
+      - name: Establish baseline
+        run: |
+          python scripts/create_baseline.py --device auto --max-steps 200
+
+      - name: Run agent trials
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          python scripts/run_agent.py \
+            --max-trials ${{ github.event.inputs.max_trials || '10' }} \
+            --no-docker
+
+      - name: Analyze results
+        run: |
+          python scripts/analyze_results.py --output outputs/report.md
+
+      - name: Upload trial artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trial-results-${{ github.run_number }}
+          path: |
+            outputs/
+            provenance/trials.db
+            logs/
+
+      - name: Create PR for accepted trials
+        if: success()
+        run: |
+          # Check if there are accepted trial branches
+          BRANCHES=$(git branch -r --list 'origin/agent/trial-*' 2>/dev/null || true)
+          if [ -n "$BRANCHES" ]; then
+            echo "Found accepted trial branches:"
+            echo "$BRANCHES"
+            echo "PRs should be created by the agent runner via provenance module."
+          else
+            echo "No accepted trial branches found."
+          fi
+
+      - name: Post summary
+        if: always()
+        run: |
+          if [ -f outputs/report.md ]; then
+            echo "## 🧬 Trial Run Summary" >> $GITHUB_STEP_SUMMARY
+            cat outputs/report.md >> $GITHUB_STEP_SUMMARY
+          fi

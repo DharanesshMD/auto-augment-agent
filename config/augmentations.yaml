@@ -1,0 +1,93 @@
+# =============================================================================
+# Augmentation Pipeline Configuration
+# =============================================================================
+# This file IS editable by the autonomous agent.
+# Changes are validated against config/schema/augmentations_schema.json.
+# =============================================================================
+
+pipeline:
+  enabled: false
+
+  # --- Text Augmentations (NLP tasks) ---
+  text_augmentations:
+    - name: "synonym_replacement"
+      enabled: false
+      probability: 0.1
+      max_replacements: 2
+      method: "wordnet"                  # wordnet | embedding
+
+    - name: "random_insertion"
+      enabled: false
+      probability: 0.1
+      max_insertions: 1
+
+    - name: "random_deletion"
+      enabled: false
+      probability: 0.05
+
+    - name: "random_swap"
+      enabled: false
+      probability: 0.05
+      max_swaps: 1
+
+    - name: "back_translation"
+      enabled: false
+      probability: 0.15
+      source_lang: "en"
+      pivot_lang: "de"                   # de | fr | es | zh
+
+    - name: "token_cutoff"
+      enabled: false
+      probability: 0.1
+      cutoff_ratio: 0.1
+
+    - name: "contextual_insertion"
+      enabled: false
+      probability: 0.1
+      model: "distilbert-base-uncased"
+
+  # --- Image Augmentations (CV tasks) ---
+  image_augmentations:
+    - name: "random_horizontal_flip"
+      enabled: false
+      probability: 0.5
+
+    - name: "random_crop"
+      enabled: false
+      probability: 0.5
+      padding: 4
+
+    - name: "color_jitter"
+      enabled: false
+      probability: 0.3
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+
+    - name: "random_rotation"
+      enabled: false
+      probability: 0.3
+      degrees: 15
+
+    - name: "random_erasing"
+      enabled: false
+      probability: 0.2
+      scale_min: 0.02
+      scale_max: 0.33
+
+    - name: "cutmix"
+      enabled: false
+      probability: 0.2
+      alpha: 1.0
+
+    - name: "mixup"
+      enabled: false
+      probability: 0.2
+      alpha: 0.4
+
+  # --- Data Mixing (optional, needs web_fetcher module) ---
+  data_mixing:
+    enabled: false
+    sources: []
+    mix_ratio: 0.1

@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tuning Hyperparameters Config",
+  "description": "Schema for validating agent-proposed hyperparameter configurations.",
+  "type": "object",
+  "required": ["optimizer", "scheduler", "batch", "regularization"],
+  "properties": {
+    "optimizer": {
+      "type": "object",
+      "required": ["name", "learning_rate"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": ["adamw", "adam", "sgd", "adafactor"]
+        },
+        "learning_rate": {
+          "type": "number",
+          "minimum": 1e-7,
+          "maximum": 1e-2
+        },
+        "weight_decay": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5
+        },
+        "betas": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "eps": {
+          "type": "number",
+          "minimum": 1e-10,
+          "maximum": 1e-4
+        },
+        "momentum": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "scheduler": {
+      "type": "object",
+      "required": ["name", "warmup_steps"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": ["cosine", "linear", "constant", "cosine_with_restarts"]
+        },
+        "warmup_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "num_cycles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "batch": {
+      "type": "object",
+      "required": ["train_batch_size", "eval_batch_size"],
+      "properties": {
+        "train_batch_size": {
+          "type": "integer",
+          "enum": [1, 2, 4, 8, 16, 32, 64]
+        },
+        "eval_batch_size": {
+          "type": "integer",
+          "enum": [1, 2, 4, 8, 16, 32, 64, 128]
+        },
+        "gradient_accumulation_steps": {
+          "type": "integer",
+          "enum": [1, 2, 4, 8, 16]
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "regularization": {
+      "type": "object",
+      "properties": {
+        "dropout": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5
+        },
+        "attention_dropout": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5
+        },
+        "label_smoothing": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.3
+        },
+        "max_grad_norm": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10.0
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "lora": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "rank": {
+          "type": "integer",
+          "enum": [4, 8, 16, 32, 64]
+        },
+        "alpha": {
+          "type": "integer",
+          "enum": [4, 8, 16, 32, 64, 128]
+        },
+        "target_modules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "dropout": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5
+        },
+        "bias": {
+          "type": "string",
+          "enum": ["none", "all", "lora_only"]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

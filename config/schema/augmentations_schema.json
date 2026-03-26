@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Augmentation Pipeline Config",
+  "description": "Schema for validating agent-proposed augmentation configurations.",
+  "type": "object",
+  "required": ["pipeline"],
+  "properties": {
+    "pipeline": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+
+        "text_augmentations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "enabled", "probability"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "synonym_replacement",
+                  "random_insertion",
+                  "random_deletion",
+                  "random_swap",
+                  "back_translation",
+                  "token_cutoff",
+                  "contextual_insertion"
+                ]
+              },
+              "enabled": { "type": "boolean" },
+              "probability": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "max_replacements": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "max_insertions": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "max_swaps": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "method": {
+                "type": "string",
+                "enum": ["wordnet", "embedding"]
+              },
+              "source_lang": { "type": "string" },
+              "pivot_lang": {
+                "type": "string",
+                "enum": ["de", "fr", "es", "zh"]
+              },
+              "cutoff_ratio": {
+                "type": "number",
+                "minimum": 0.01,
+                "maximum": 0.5
+              },
+              "model": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+
+        "image_augmentations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "enabled", "probability"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "random_horizontal_flip",
+                  "random_crop",
+                  "color_jitter",
+                  "random_rotation",
+                  "random_erasing",
+                  "cutmix",
+                  "mixup"
+                ]
+              },
+              "enabled": { "type": "boolean" },
+              "probability": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "padding": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 32
+              },
+              "brightness": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "contrast": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "saturation": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "hue": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 0.5
+              },
+              "degrees": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 180
+              },
+              "scale_min": {
+                "type": "number",
+                "minimum": 0.01,
+                "maximum": 0.5
+              },
+              "scale_max": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 1.0
+              },
+              "alpha": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 10.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+
+        "data_mixing": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "sources": {
+              "type": "array",
+              "items": { "type": "string" },
+              "maxItems": 5
+            },
+            "mix_ratio": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 0.5
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
