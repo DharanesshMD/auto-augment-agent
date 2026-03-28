@@ -61,6 +61,11 @@ def create_baseline(device: str = "auto", max_steps: int = 500):
     # Save baseline
     output_dir = PROJECT_ROOT / "outputs" / "baseline"
     results_path = trainer.save_results(results, output_dir)
+    
+    # Save model if requested
+    if config.get("training", {}).get("save_checkpoints", False):
+        model_path = trainer.save_model(model, output_dir)
+        console.print(f"[dim]Model saved to: {model_path}[/dim]")
 
     # Also save to a known location for the agent
     baseline_path = PROJECT_ROOT / "outputs" / "baseline_metrics.json"

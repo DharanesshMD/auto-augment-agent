@@ -336,8 +336,11 @@ class Trainer:
         total_correct = 0
         total_samples = 0
         n_batches = 0
+        max_eval = self.config.get("training", {}).get("max_eval_steps")
 
         for batch in dataloader:
+            if max_eval and n_batches >= max_eval:
+                break
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
             if self.task in ("language_modeling", "text_classification"):
@@ -379,3 +382,39 @@ class Trainer:
         with open(results_path, "w") as f:
             json.dump(results, f, indent=2, default=str)
         return results_path
+
+    def save_model(self, model: nn.Module, output_dir: str | Path) -> Path:
+        """Save the trained model or adapters.
+
+        Args:
+            model: The trained model to save.
+            output_dir: Directory to save the model/adapters in.
+
+        Returns:
+            Path to the saved model directory.
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        model_path = output_dir / "model"
+
+        # Check if LoRA was used
+        is_lora = any(hasattr(m, "is_peft_model") or "PeftModel" in m.__class__.__name__ for m in model.modules())
+
+        if is_lora:
+            from src.training.lora import save_lora_weights
+            save_lora_weights(model, model_path)
+            logger.info(f"LoRA adapters saved to {model_path}")
+        elif hasattr(model, "save_pretrained"):
+            model.save_pretrained(model_path)
+            # Also save tokenizer for NLP tasks
+            model_name = self.config["model"]["name"]
+            from transformers import AutoTokenizer
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            tokenizer.save_pretrained(model_path)
+            logger.info(f"Transformers model and tokenizer saved to {model_path}")
+        else:
+            # Fallback for standard torch models
+            torch.save(model.state_dict(), model_path / "model_weights.pt")
+            logger.info(f"Model weights saved to {model_path / 'model_weights.pt'}")
+
+        return model_path

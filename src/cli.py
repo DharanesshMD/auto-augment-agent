@@ -60,6 +60,22 @@ def baseline(device: str, max_steps: int):
 
 
 @main.command()
+@click.argument("model_path", type=click.Path(exists=True))
+@click.option("--input", "-i", "input_text", default=None, help="Input string for the model.")
+@click.option("--device", default="auto", help="Device to use.")
+def test(model_path: str, input_text: str | None, device: str):
+    """🔮 Run inference on a trained model or trial."""
+    import subprocess
+    import sys
+
+    cmd = [sys.executable, "scripts/test_model.py", "--model-path", model_path, "--device", device]
+    if input_text:
+        cmd.extend(["--input", input_text])
+    
+    subprocess.run(cmd)
+
+
+@main.command()
 @click.option("--output", "-o", default=None, help="Output path for the report.")
 def analyze(output: str | None):
     """📋 Analyze completed trial results and generate report."""

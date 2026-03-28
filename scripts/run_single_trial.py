@@ -70,6 +70,11 @@ def run_trial(
     # Save results
     out_dir = Path(output_dir) if output_dir else Path("outputs") / f"trial_{trial_id}"
     results_path = trainer.save_results(results, out_dir)
+    
+    # Save model if requested
+    if config.get("training", {}).get("save_checkpoints", False):
+        model_path = trainer.save_model(model, out_dir)
+        print(f"Model saved to: {model_path}")
 
     print(f"Trial {trial_id} complete. Results: {results_path}")
     print(json.dumps(results.get("eval_metrics", {}), indent=2))

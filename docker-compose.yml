@@ -10,18 +10,8 @@ services:
       - ./config:/app/config:ro
       - ./outputs:/app/outputs:rw
       - ./data_cache:/app/data_cache:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-        limits:
-          memory: 16G
-    environment:
-      - CUDA_VISIBLE_DEVICES=0
-    network_mode: "none"  # Isolated by default
+    # No GPU on Mac Docker passthrough, use local run instead.
+    network_mode: "none"
     restart: "no"
 
   # Optional: Self-hosted MLflow tracking server
